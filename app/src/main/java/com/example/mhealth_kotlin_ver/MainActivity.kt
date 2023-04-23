@@ -113,7 +113,9 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         for (i in 0 until datalist.size) {
             Log.d("debug", "datalist[$i]: ${datalist[i].joinToString()}")
         }
+
         csvHelper.WriteCSVfile(FILE_NAME, datalist)
+
     }
 
 
