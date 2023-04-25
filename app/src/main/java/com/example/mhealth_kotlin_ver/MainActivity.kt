@@ -117,9 +117,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         csvHelper.WriteCSVfile(FILE_NAME, datalist)
 
     }
-
-
-
     companion object {
         private const val FILE_NAME = "Walk_analysis.csv"
     }
