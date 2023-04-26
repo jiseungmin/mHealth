@@ -52,7 +52,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             }
         }
     }
-
     override fun onAccuracyChanged(p0: Sensor?, p1: Int) = Unit
 
     private fun MeasurementButton(){
@@ -78,9 +77,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         val datalist = arrayListOf<Array<String>>()
         val headerlist = arrayListOf<Array<String>>()
 
-        // CSV header
-        headerlist.add(arrayOf("x_Acc", "y_Acc", "z_Acc", "x_Gyr", "y_Gyr", "z_Gyr", "x_Rot", "y_Rot", "z_Rot"))
-
         // Add data if SensorEvent is not null
         p0?.let {
             when(it.sensor.type) {
@@ -102,7 +98,14 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             }
 
             // Add data row to the list
-            datalist.add(dataArray)
+            if (dataArray.any { it.isEmpty() }) {
+                Log.d("debug", "Empty elements found in dataArray")
+                return
+            } else {
+                // Add data row to the list
+                datalist.add(dataArray)
+
+            }
         }
 
         if (!isHeaderAdded) {
@@ -110,12 +113,11 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             csvHelper.WriteCSVfile(FILE_NAME, headerlist) // Add header to file
             isHeaderAdded = true // Update header added status
         }
+
         for (i in 0 until datalist.size) {
             Log.d("debug", "datalist[$i]: ${datalist[i].joinToString()}")
         }
-
         csvHelper.WriteCSVfile(FILE_NAME, datalist)
-
     }
     companion object {
         private const val FILE_NAME = "Walk_analysis.csv"
