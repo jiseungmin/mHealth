@@ -34,7 +34,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     }
 
     override fun onSensorChanged(p0: SensorEvent?) {
-
         p0?.let {
             when (it.sensor.type) {
                 Sensor.TYPE_ACCELEROMETER -> {
@@ -58,15 +57,15 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         button.setOnClickListener {
             if (exep == 0) {
                 exep = 1
-                button.text = "측정종료"
+                button.text = "Stop"
                 sensorManager.registerListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_FASTEST)
                 sensorManager.registerListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR), SensorManager.SENSOR_DELAY_FASTEST)
                 sensorManager.registerListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE), SensorManager.SENSOR_DELAY_FASTEST)
             } else {
                 exep = 0
                 sensorManager.unregisterListener(this)
-                textview.text = "측정이 종료되었습니다."
-                button.text = "측정하기"
+                textview.text = "Measurement has ended."
+                button.text = "Start"
             }
         }
     }
@@ -104,16 +103,13 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             } else {
                 // Add data row to the list
                 datalist.add(dataArray)
-
             }
         }
-
         if (!isHeaderAdded) {
             headerlist.add(arrayOf("x_Acc", "y_Acc", "z_Acc", "x_Gyr", "y_Gyr", "z_Gyr", "x_Rot", "y_Rot", "z_Rot"))
             csvHelper.WriteCSVfile(FILE_NAME, headerlist) // Add header to file
             isHeaderAdded = true // Update header added status
         }
-
         for (i in 0 until datalist.size) {
             Log.d("debug", "datalist[$i]: ${datalist[i].joinToString()}")
         }

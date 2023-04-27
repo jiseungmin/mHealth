@@ -10,9 +10,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
-        android:text="안녕하세요 설문에 응해주시길 바랍니다."
+        android:text="Hello, please fill out the survey"
         android:textColor="@color/black"
-        android:textSize="16sp"
+        android:textSize="18sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -27,9 +27,9 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/surveytext"
         android:textColor="@color/black"
-        android:textSize="18sp"
+        android:textSize="20sp"
         android:textStyle="bold"
-        android:text="현재 아픈 곳이 있습니까?" />
+        android:text="Are you currently sick?" />
 
     <CheckBox
         android:id="@+id/Pain_Yes_Checkbox"
@@ -39,7 +39,7 @@
         android:layout_marginTop="10dp"
         android:textSize="16sp"
         android:textStyle="bold"
-        android:text="예"
+        android:text="Yes"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/Pain_Question_Textview" />
 
@@ -51,7 +51,7 @@
         android:layout_marginTop="10dp"
         android:textSize="16sp"
         android:textStyle="bold"
-        android:text="아니요"
+        android:text="No"
         app:layout_constraintStart_toEndOf="@id/Pain_Yes_Checkbox"
         app:layout_constraintTop_toBottomOf="@id/Pain_Question_Textview" />
 
@@ -64,9 +64,9 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/Pain_No_Checkbox"
         android:textColor="@color/black"
-        android:textSize="18sp"
+        android:textSize="20sp"
         android:textStyle="bold"
-        android:text="현재 몸 상태 어떠세요?" />
+        android:text="How are you currently feeling?" />
 
     <EditText
         android:id="@+id/Status_EditText"
@@ -87,9 +87,9 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/Status_EditText"
         android:textColor="@color/black"
-        android:textSize="18sp"
+        android:textSize="20sp"
         android:textStyle="bold"
-        android:text="현재 기분 어떠세요?" />
+        android:text="How are you feeling right now?" />
 
     <CheckBox
         android:id="@+id/Filling_Good_Checkbox"
@@ -99,7 +99,7 @@
         android:layout_marginTop="10dp"
         android:textSize="16sp"
         android:textStyle="bold"
-        android:text="좋음"
+        android:text="Good"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/Filling_Question_Textview" />
 
@@ -111,7 +111,7 @@
         android:layout_marginTop="10dp"
         android:textSize="16sp"
         android:textStyle="bold"
-        android:text="보통"
+        android:text="Normal"
         app:layout_constraintStart_toEndOf="@id/Filling_Good_Checkbox"
         app:layout_constraintTop_toBottomOf="@id/Filling_Question_Textview" />
 
@@ -123,7 +123,7 @@
         android:layout_marginTop="10dp"
         android:textSize="16sp"
         android:textStyle="bold"
-        android:text="나쁨"
+        android:text="Bad"
         app:layout_constraintStart_toEndOf="@id/Filling_Commonly_Checkbox"
         app:layout_constraintTop_toBottomOf="@id/Filling_Question_Textview" />
 
@@ -136,9 +136,9 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/Filling_Bad_Checkbox"
         android:textColor="@color/black"
-        android:textSize="18sp"
+        android:textSize="20sp"
         android:textStyle="bold"
-        android:text="질병에 대해 알려주실게 있나요?" />
+        android:text="Can you tell us about the disease?" />
 
     <EditText
         android:id="@+id/Disease_EditText"
@@ -156,7 +156,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="16sp"
         android:layout_marginEnd="16sp"
-        android:text="다음으로 넘어가기"
+        android:text="Next"
         android:textSize="24sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
