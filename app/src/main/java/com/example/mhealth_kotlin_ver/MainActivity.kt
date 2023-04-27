@@ -11,15 +11,22 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Button
 import android.widget.TextView
+import androidx.appcompat.widget.AppCompatButton
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.UUID
 
 class MainActivity : AppCompatActivity(), SensorEventListener {
 
     private val sensorManager by lazy { getSystemService(Context.SENSOR_SERVICE) as SensorManager }
     private val textview: TextView by lazy { findViewById(R.id.TextView) }
-    private val button: Button by lazy { findViewById(R.id.BUTTON) }
+    private val button: AppCompatButton by lazy { findViewById(R.id.BUTTON) }
+    private val SaveButotn : AppCompatButton by lazy { findViewById(R.id.SaveButton) }
     private var exep: Int = 0
+    private var Filename: String = ""
     private var isHeaderAdded = false // 헤더 추가 여부를 저장하는 변수
-    private val dataArray = arrayOf("","","","","","","","","")
+    private val dataArray = arrayOf("0:0", "", "", "", "", "", "", "", "", "")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,26 +45,40 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             when (it.sensor.type) {
                 Sensor.TYPE_ACCELEROMETER -> {
                     textview.text = "Accelerometer : x: ${p0.values[0]}, y: ${p0.values[1]}, z: ${p0.values[2]}"
-                    CsvWrite(p0)
+                    dataArray[1] = p0.values[0].toString()
+                    dataArray[2] = p0.values[1].toString()
+                    dataArray[3] = p0.values[2].toString()
+                    CsvWrite(Filename)
                 }
+
                 Sensor.TYPE_GYROSCOPE -> {
                     textview.append("\nRotation Vector  : x: ${p0.values[0]}, y: ${p0.values[1]}, z: ${p0.values[2]}")
-                    CsvWrite(p0)
+                    dataArray[4] = p0.values[0].toString()
+                    dataArray[5] = p0.values[1].toString()
+                    dataArray[6] = p0.values[2].toString()
+                    CsvWrite(Filename)
                 }
+
                 Sensor.TYPE_ROTATION_VECTOR -> {
                     textview.append("\nGyroscope : x: ${p0.values[0]}, y: ${p0.values[1]}, z: ${p0.values[2]}")
-                    CsvWrite(p0)
+                    dataArray[7] = p0.values[0].toString()
+                    dataArray[8] = p0.values[1].toString()
+                    dataArray[9] = p0.values[2].toString()
+                    CsvWrite(Filename)
                 }
             }
         }
     }
+
     override fun onAccuracyChanged(p0: Sensor?, p1: Int) = Unit
 
-    private fun MeasurementButton(){
+    private fun MeasurementButton() {
         button.setOnClickListener {
             if (exep == 0) {
                 exep = 1
                 button.text = "Stop"
+                SaveButotn.setEnabled(false);
+                Filename=UUID.randomUUID().toString()
                 sensorManager.registerListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_FASTEST)
                 sensorManager.registerListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR), SensorManager.SENSOR_DELAY_FASTEST)
                 sensorManager.registerListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE), SensorManager.SENSOR_DELAY_FASTEST)
@@ -65,57 +86,41 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 exep = 0
                 sensorManager.unregisterListener(this)
                 textview.text = "Measurement has ended."
-                button.text = "Start"
+                button.text = "RESUME"
+                SaveButotn.setEnabled(true);
             }
         }
     }
 
-    private fun CsvWrite(p0: SensorEvent?) {
+    private fun CsvWrite(Filename:String) {
         val filePath = filesDir.toString()
         val csvHelper = CsvHelper(this, filePath)
         val datalist = arrayListOf<Array<String>>()
         val headerlist = arrayListOf<Array<String>>()
 
-        // Add data if SensorEvent is not null
-        p0?.let {
-            when(it.sensor.type) {
-                Sensor.TYPE_ACCELEROMETER -> {
-                    dataArray[0] = p0.values[0].toString()
-                    dataArray[1] = p0.values[1].toString()
-                    dataArray[2] = p0.values[2].toString()
-                }
-                Sensor.TYPE_GYROSCOPE -> {
-                    dataArray[3] = p0.values[0].toString()
-                    dataArray[4] = p0.values[1].toString()
-                    dataArray[5] = p0.values[2].toString()
-                }
-                Sensor.TYPE_ROTATION_VECTOR -> {
-                    dataArray[6] = p0.values[0].toString()
-                    dataArray[7] = p0.values[1].toString()
-                    dataArray[8] = p0.values[2].toString()
-                }
-            }
-
-            // Add data row to the list
-            if (dataArray.any { it.isEmpty() }) {
-                Log.d("debug", "Empty elements found in dataArray")
-                return
-            } else {
-                // Add data row to the list
-                datalist.add(dataArray)
-            }
-        }
         if (!isHeaderAdded) {
-            headerlist.add(arrayOf("x_Acc", "y_Acc", "z_Acc", "x_Gyr", "y_Gyr", "z_Gyr", "x_Rot", "y_Rot", "z_Rot"))
-            csvHelper.WriteCSVfile(FILE_NAME, headerlist) // Add header to file
-            isHeaderAdded = true // Update header added status
+            headerlist.add(arrayOf("Evnet_Time", "x_Acc", "y_Acc", "z_Acc", "x_Gyr", "y_Gyr", "z_Gyr", "x_Rot", "y_Rot",))
+            csvHelper.WriteCSVfile(Filename, headerlist)
+            isHeaderAdded = true
         }
-        for (i in 0 until datalist.size) {
-            Log.d("debug", "datalist[$i]: ${datalist[i].joinToString()}")
+
+        if (dataArray.any { it.isEmpty() }) {
+            Log.d("debug", "Empty elements found in dataArray")
+            return
+        } else {
+            val eventTime = System.currentTimeMillis()
+            val formatter = SimpleDateFormat("MM-dd HH:mm:ss:SSS", Locale.getDefault())
+            val formattedTime = formatter.format(Date(eventTime))
+
+            dataArray[0] = formattedTime.toString()
+            datalist.add(dataArray)
+            csvHelper.WriteCSVfile(Filename, datalist)
+            dataArray.fill("", 1, 9)
         }
-        csvHelper.WriteCSVfile(FILE_NAME, datalist)
     }
+
     companion object {
-        private const val FILE_NAME = "Walk_analysis.csv"
+        private const val FILE_NAME = "Walk_analysis&uuid.csv"
+
     }
 }
