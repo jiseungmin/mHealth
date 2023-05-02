@@ -20,7 +20,4 @@ class CsvHelper(private val context: Context, private val filePath: String) {
             Toast.makeText(context, "error", Toast.LENGTH_SHORT).show()
         }
     }
-
-    fun CSVfilestore() {
-    }
 }
