@@ -9,13 +9,13 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Environment
 import android.util.Log
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatButton
 import com.google.android.material.snackbar.Snackbar
 import java.io.File
@@ -32,8 +32,12 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private val SaveButton: AppCompatButton by lazy { findViewById(R.id.SaveButton) }
     private val ResetButton: AppCompatButton by lazy { findViewById(R.id.ResetButton) }
     private val pathToExternalStorage = Environment.getExternalStorageDirectory().toString()
+    private var rotationMatrix = FloatArray(9)
+    private var gravityMatrix = FloatArray(3)
+    private var magneticMatrix = FloatArray(3)
     private val exportDir = File(pathToExternalStorage, "/mHealth_kotlin")
-    private val dataArray = arrayOf("0:0", "", "", "", "", "", "", "", "", "")
+    private val dataArray =
+        arrayOf("0:0", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "")
     private var datalist = arrayListOf<Array<String>>()
     private var Filename: String = ""
     private var exep: Int = 0
@@ -56,31 +60,47 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         p0?.let {
             when (it.sensor.type) {
                 Sensor.TYPE_ACCELEROMETER -> {
+                    Log.d("123456", "TYPE_ACCELEROMETER: " + dataArray.contentToString())
                     textview.text =
                         "Accelerometer : x: ${p0.values[0]}, y: ${p0.values[1]}, z: ${p0.values[2]}"
                     dataArray[1] = p0.values[0].toString()
                     dataArray[2] = p0.values[1].toString()
                     dataArray[3] = p0.values[2].toString()
-                    CsvWrite()
                 }
 
                 Sensor.TYPE_GYROSCOPE -> {
-                    textview.append("\nRotation Vector  : x: ${p0.values[0]}, y: ${p0.values[1]}, z: ${p0.values[2]}")
+                    Log.d("123456", "TYPE_GYROSCOPE: " + dataArray.contentToString())
+                    textview.append("\nGyroscope  : x: ${p0.values[0]}, y: ${p0.values[1]}, z: ${p0.values[2]}")
                     dataArray[4] = p0.values[0].toString()
                     dataArray[5] = p0.values[1].toString()
                     dataArray[6] = p0.values[2].toString()
-                    CsvWrite()
                 }
 
                 Sensor.TYPE_ROTATION_VECTOR -> {
-                    textview.append("\nGyroscope : x: ${p0.values[0]}, y: ${p0.values[1]}, z: ${p0.values[2]}")
+                    Log.d("123456", "TYPE_ROTATION_VECTOR: " + dataArray.contentToString())
+                    textview.append("\nRotation Vector : x: ${p0.values[0]}, y: ${p0.values[1]}, z: ${p0.values[2]}")
                     dataArray[7] = p0.values[0].toString()
                     dataArray[8] = p0.values[1].toString()
                     dataArray[9] = p0.values[2].toString()
-                    CsvWrite()
+                }
+
+                Sensor.TYPE_MAGNETIC_FIELD -> {
+                    Log.d("123456", "TYPE_MAGNETIC_FIELD: " + dataArray.contentToString())
+                    magneticMatrix = p0.values
+                }
+
+                Sensor.TYPE_GRAVITY -> {
+                    Log.d("123456", "TYPE_GRAVITY: " + dataArray.contentToString())
+                    gravityMatrix = p0.values
                 }
             }
         }
+        SensorManager.getRotationMatrix(rotationMatrix, null, gravityMatrix, magneticMatrix)
+        for (i in 0 until rotationMatrix.size) {
+            dataArray[i + 10] = rotationMatrix[i].toString()
+        }
+        Log.d("123456", "dataarray: " + dataArray.contentToString())
+        CsvWrite()
     }
 
     override fun onAccuracyChanged(p0: Sensor?, p1: Int) = Unit
@@ -106,6 +126,16 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 sensorManager.registerListener(
                     this,
                     sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE),
+                    SensorManager.SENSOR_DELAY_FASTEST
+                )
+                sensorManager.registerListener(
+                    this,
+                    sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD),
+                    SensorManager.SENSOR_DELAY_FASTEST
+                )
+                sensorManager.registerListener(
+                    this,
+                    sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY),
                     SensorManager.SENSOR_DELAY_FASTEST
                 )
             } else {
@@ -134,10 +164,33 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             builder.setTitle("Save CSV File")
             builder.setMessage("Would you like to save the csv file?")
             builder.setPositiveButton("Yes") { dialog, which ->
-                headerlist.add(arrayOf("Evnet_Time", "x_Acc", "y_Acc", "z_Acc", "x_Gyr", "y_Gyr", "z_Gyr", "x_Rot", "y_Rot","z_Rot"))
+                headerlist.add(
+                    arrayOf(
+                        "Evnet_Time",
+                        "x_Acc",
+                        "y_Acc",
+                        "z_Acc",
+                        "x_Gyr",
+                        "y_Gyr",
+                        "z_Gyr",
+                        "x_Rot",
+                        "y_Rot",
+                        "z_Rot",
+                        "Rot1",
+                        "Rot2",
+                        "Rot3",
+                        "Rot4",
+                        "Rot5",
+                        "Rot6",
+                        "Rot7",
+                        "Rot8",
+                        "Rot9",
+                    )
+                )
                 csvHelper.WriteCSVfile(Filename, headerlist)
                 csvHelper.WriteCSVfile(Filename, datalist)
-                var snackbar = Snackbar.make(it, "The CSV file has been saved.", Snackbar.LENGTH_LONG)
+                var snackbar =
+                    Snackbar.make(it, "The CSV file has been saved.", Snackbar.LENGTH_LONG)
                 snackbar.show()
                 MeasureAgain()
             }
@@ -192,10 +245,9 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             val eventTime = System.currentTimeMillis()
             val formatter = SimpleDateFormat("MM-dd HH:mm:ss:SSS", Locale.getDefault())
             val formattedTime = formatter.format(Date(eventTime))
-
             dataArray[0] = formattedTime.toString()
             datalist.add(dataArray.copyOf())
-            dataArray.fill("", 1, 9)
+            dataArray.fill("", 1, 19)
         }
     }
 
