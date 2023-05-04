@@ -17,7 +17,7 @@ class CsvHelper(private val context: Context, private val filePath: String) {
             writer.close()
             file.close()
         } catch (e: IOException) {
-            Toast.makeText(context, "error", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "${e}", Toast.LENGTH_SHORT).show()
         }
     }
 }

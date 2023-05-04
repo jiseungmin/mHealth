@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
+import android.database.SQLException
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -35,9 +36,12 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private var rotationMatrix = FloatArray(9)
     private var gravityMatrix = FloatArray(3)
     private var magneticMatrix = FloatArray(3)
+    private var lastUpdate: Long = -1
+    private val POLL_FREQUENCY: Long = 10
+    private var eventTime: Long = 0
     private val exportDir = File(pathToExternalStorage, "/mHealth_kotlin")
     private val dataArray =
-        arrayOf("0:0", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "")
+        arrayOf("", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "")
     private var datalist = arrayListOf<Array<String>>()
     private var Filename: String = ""
     private var exep: Int = 0
@@ -57,10 +61,13 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     }
 
     override fun onSensorChanged(p0: SensorEvent?) {
+        var eventTime = System.currentTimeMillis()
+        val formatter = SimpleDateFormat("MM-dd HH:mm:ss:SSS", Locale.getDefault())
+        val formattedTime = formatter.format(Date(eventTime))
+        dataArray[0] = formattedTime.toString()
         p0?.let {
             when (it.sensor.type) {
                 Sensor.TYPE_ACCELEROMETER -> {
-                    Log.d("123456", "TYPE_ACCELEROMETER: " + dataArray.contentToString())
                     textview.text =
                         "Accelerometer : x: ${p0.values[0]}, y: ${p0.values[1]}, z: ${p0.values[2]}"
                     dataArray[1] = p0.values[0].toString()
@@ -69,7 +76,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 }
 
                 Sensor.TYPE_GYROSCOPE -> {
-                    Log.d("123456", "TYPE_GYROSCOPE: " + dataArray.contentToString())
                     textview.append("\nGyroscope  : x: ${p0.values[0]}, y: ${p0.values[1]}, z: ${p0.values[2]}")
                     dataArray[4] = p0.values[0].toString()
                     dataArray[5] = p0.values[1].toString()
@@ -77,7 +83,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 }
 
                 Sensor.TYPE_ROTATION_VECTOR -> {
-                    Log.d("123456", "TYPE_ROTATION_VECTOR: " + dataArray.contentToString())
                     textview.append("\nRotation Vector : x: ${p0.values[0]}, y: ${p0.values[1]}, z: ${p0.values[2]}")
                     dataArray[7] = p0.values[0].toString()
                     dataArray[8] = p0.values[1].toString()
@@ -85,22 +90,24 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 }
 
                 Sensor.TYPE_MAGNETIC_FIELD -> {
-                    Log.d("123456", "TYPE_MAGNETIC_FIELD: " + dataArray.contentToString())
                     magneticMatrix = p0.values
                 }
 
                 Sensor.TYPE_GRAVITY -> {
-                    Log.d("123456", "TYPE_GRAVITY: " + dataArray.contentToString())
                     gravityMatrix = p0.values
                 }
             }
         }
-        SensorManager.getRotationMatrix(rotationMatrix, null, gravityMatrix, magneticMatrix)
-        for (i in 0 until rotationMatrix.size) {
-            dataArray[i + 10] = rotationMatrix[i].toString()
+        Log.d("순서1",dataArray.contentToString())
+        if(dataArray.count{it.isNotBlank()} == 10){ //dataArray가 10자리가 다채워졌으면 조건
+            SensorManager.getRotationMatrix(rotationMatrix, null, gravityMatrix, magneticMatrix)
+            for (i in 0 until rotationMatrix.size) {
+                dataArray[i + 10] = rotationMatrix[i].toString()
+            }
+            Log.d("순서2",dataArray.contentToString())
+            datalist.add(dataArray.copyOf())
+            dataArray.fill("", 1, 19)
         }
-        Log.d("123456", "dataarray: " + dataArray.contentToString())
-        CsvWrite()
     }
 
     override fun onAccuracyChanged(p0: Sensor?, p1: Int) = Unit
@@ -153,7 +160,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         val filePath = exportDir.toString()
         Log.d("filepath", "${exportDir}")
         val csvHelper = CsvHelper(this, filePath)
-        val headerlist = arrayListOf<Array<String>>()
+        var headerlist = arrayListOf<Array<String>>()
         if (!exportDir.exists()) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 requestPermissions(arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), 2000)
@@ -184,11 +191,12 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                         "Rot6",
                         "Rot7",
                         "Rot8",
-                        "Rot9",
+                        "Rot9"
                     )
                 )
                 csvHelper.WriteCSVfile(Filename, headerlist)
                 csvHelper.WriteCSVfile(Filename, datalist)
+                headerlist = arrayListOf()
                 var snackbar =
                     Snackbar.make(it, "The CSV file has been saved.", Snackbar.LENGTH_LONG)
                 snackbar.show()
@@ -242,12 +250,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             Log.d("debug", "Empty elements found in dataArray")
             return
         } else {
-            val eventTime = System.currentTimeMillis()
-            val formatter = SimpleDateFormat("MM-dd HH:mm:ss:SSS", Locale.getDefault())
-            val formattedTime = formatter.format(Date(eventTime))
-            dataArray[0] = formattedTime.toString()
-            datalist.add(dataArray.copyOf())
-            dataArray.fill("", 1, 19)
+
         }
     }
 
