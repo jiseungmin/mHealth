@@ -35,13 +35,11 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private val pathToExternalStorage = Environment.getExternalStorageDirectory().toString()
     private var rotationMatrix = FloatArray(9)
     private var gravityMatrix = FloatArray(3)
+    private var lastUpdateTime: Long = 0
+    private val SENSOR_INTERVAL = 10
     private var magneticMatrix = FloatArray(3)
-    private var lastUpdate: Long = -1
-    private val POLL_FREQUENCY: Long = 10
-    private var eventTime: Long = 0
     private val exportDir = File(pathToExternalStorage, "/mHealth_kotlin")
-    private val dataArray =
-        arrayOf("", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "")
+    private val dataArray = arrayOf("", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "")
     private var datalist = arrayListOf<Array<String>>()
     private var Filename: String = ""
     private var exep: Int = 0
@@ -61,13 +59,10 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     }
 
     override fun onSensorChanged(p0: SensorEvent?) {
-        var eventTime = System.currentTimeMillis()
-        val formatter = SimpleDateFormat("MM-dd HH:mm:ss:SSS", Locale.getDefault())
-        val formattedTime = formatter.format(Date(eventTime))
-        dataArray[0] = formattedTime.toString()
         p0?.let {
             when (it.sensor.type) {
                 Sensor.TYPE_ACCELEROMETER -> {
+                    Log.d("확인", "TYPE_ACCELEROMETER+${dataArray[0]}")
                     textview.text =
                         "Accelerometer : x: ${p0.values[0]}, y: ${p0.values[1]}, z: ${p0.values[2]}"
                     dataArray[1] = p0.values[0].toString()
@@ -76,6 +71,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 }
 
                 Sensor.TYPE_GYROSCOPE -> {
+                    Log.d("확인", "TYPE_GYROSCOPE+${dataArray[0]}")
                     textview.append("\nGyroscope  : x: ${p0.values[0]}, y: ${p0.values[1]}, z: ${p0.values[2]}")
                     dataArray[4] = p0.values[0].toString()
                     dataArray[5] = p0.values[1].toString()
@@ -83,6 +79,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 }
 
                 Sensor.TYPE_ROTATION_VECTOR -> {
+                    Log.d("확인", "TYPE_ROTATION_VECTOR+${dataArray[0]}")
                     textview.append("\nRotation Vector : x: ${p0.values[0]}, y: ${p0.values[1]}, z: ${p0.values[2]}")
                     dataArray[7] = p0.values[0].toString()
                     dataArray[8] = p0.values[1].toString()
@@ -90,171 +87,183 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 }
 
                 Sensor.TYPE_MAGNETIC_FIELD -> {
+                    Log.d("확인", "TYPE_MAGNETIC_FIELD+${dataArray[0]}")
                     magneticMatrix = p0.values
                 }
 
                 Sensor.TYPE_GRAVITY -> {
+                    Log.d("확인", "TYPE_GRAVITY+${dataArray[0]}")
                     gravityMatrix = p0.values
                 }
             }
         }
-        Log.d("순서1",dataArray.contentToString())
-        if(dataArray.count{it.isNotBlank()} == 10){ //dataArray가 10자리가 다채워졌으면 조건
+
+//        if (eventTime - lastUpdateTime >= SENSOR_INTERVAL) {
+//            lastUpdateTime = eventTime
+//            dataArray[0] = formattedTime.toString()
+//            datalist.add(dataArray.copyOf())
+//            dataArray.fill("", 0, 19)
+//        }
+        if(dataArray.count{it.isNotBlank()} == 9){
+            var eventTime = System.currentTimeMillis()
+            val formatter = SimpleDateFormat("MM-dd HH:mm:ss:SSS", Locale.getDefault())
+            val formattedTime = formatter.format(Date(eventTime))
+            dataArray[0] = formattedTime.toString()
+            Log.d("ㅋㅌㅗ",dataArray.contentToString())
             SensorManager.getRotationMatrix(rotationMatrix, null, gravityMatrix, magneticMatrix)
             for (i in 0 until rotationMatrix.size) {
                 dataArray[i + 10] = rotationMatrix[i].toString()
             }
             Log.d("순서2",dataArray.contentToString())
             datalist.add(dataArray.copyOf())
-            dataArray.fill("", 1, 19)
+            dataArray.fill("", 0, 19)
+        }
+}
+
+override fun onAccuracyChanged(p0: Sensor?, p1: Int) = Unit
+
+private fun MeasurementButton() {
+    button.setOnClickListener {
+        if (exep == 0) {
+            exep = 1
+            button.text = "Stop"
+            SaveButton.setEnabled(false)
+            ResetButton.setEnabled(false)
+            Filename = UUID.randomUUID().toString() + ".csv"
+            sensorManager.registerListener(
+                this,
+                sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
+                SensorManager.SENSOR_DELAY_FASTEST
+            )
+            sensorManager.registerListener(
+                this,
+                sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR),
+                SensorManager.SENSOR_DELAY_FASTEST
+            )
+            sensorManager.registerListener(
+                this,
+                sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE),
+                SensorManager.SENSOR_DELAY_FASTEST
+            )
+            sensorManager.registerListener(
+                this,
+                sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD),
+                SensorManager.SENSOR_DELAY_FASTEST
+            )
+            sensorManager.registerListener(
+                this,
+                sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY),
+                SensorManager.SENSOR_DELAY_FASTEST
+            )
+        } else {
+            exep = 0
+            sensorManager.unregisterListener(this)
+            textview.text = "Measurement has ended."
+            button.text = "RESUME"
+            SaveButton.setEnabled(true)
+            ResetButton.setEnabled(true)
         }
     }
+}
 
-    override fun onAccuracyChanged(p0: Sensor?, p1: Int) = Unit
-
-    private fun MeasurementButton() {
-        button.setOnClickListener {
-            if (exep == 0) {
-                exep = 1
-                button.text = "Stop"
-                SaveButton.setEnabled(false)
-                ResetButton.setEnabled(false)
-                Filename = UUID.randomUUID().toString() + ".csv"
-                sensorManager.registerListener(
-                    this,
-                    sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
-                    SensorManager.SENSOR_DELAY_FASTEST
-                )
-                sensorManager.registerListener(
-                    this,
-                    sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR),
-                    SensorManager.SENSOR_DELAY_FASTEST
-                )
-                sensorManager.registerListener(
-                    this,
-                    sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE),
-                    SensorManager.SENSOR_DELAY_FASTEST
-                )
-                sensorManager.registerListener(
-                    this,
-                    sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD),
-                    SensorManager.SENSOR_DELAY_FASTEST
-                )
-                sensorManager.registerListener(
-                    this,
-                    sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY),
-                    SensorManager.SENSOR_DELAY_FASTEST
-                )
-            } else {
-                exep = 0
-                sensorManager.unregisterListener(this)
-                textview.text = "Measurement has ended."
-                button.text = "RESUME"
-                SaveButton.setEnabled(true)
-                ResetButton.setEnabled(true)
-            }
+private fun SaveCsvfileButton() {
+    val filePath = exportDir.toString()
+    Log.d("filepath", "${exportDir}")
+    val csvHelper = CsvHelper(this, filePath)
+    var headerlist = arrayListOf<Array<String>>()
+    if (!exportDir.exists()) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            requestPermissions(arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), 2000)
         }
     }
-
-    private fun SaveCsvfileButton() {
-        val filePath = exportDir.toString()
-        Log.d("filepath", "${exportDir}")
-        val csvHelper = CsvHelper(this, filePath)
-        var headerlist = arrayListOf<Array<String>>()
-        if (!exportDir.exists()) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                requestPermissions(arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), 2000)
-            }
-        }
-        SaveButton.setOnClickListener {
-            val builder = AlertDialog.Builder(this)
-            builder.setTitle("Save CSV File")
-            builder.setMessage("Would you like to save the csv file?")
-            builder.setPositiveButton("Yes") { dialog, which ->
-                headerlist.add(
-                    arrayOf(
-                        "Evnet_Time",
-                        "x_Acc",
-                        "y_Acc",
-                        "z_Acc",
-                        "x_Gyr",
-                        "y_Gyr",
-                        "z_Gyr",
-                        "x_Rot",
-                        "y_Rot",
-                        "z_Rot",
-                        "Rot1",
-                        "Rot2",
-                        "Rot3",
-                        "Rot4",
-                        "Rot5",
-                        "Rot6",
-                        "Rot7",
-                        "Rot8",
-                        "Rot9"
-                    )
+    SaveButton.setOnClickListener {
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle("Save CSV File")
+        builder.setMessage("Would you like to save the csv file?")
+        builder.setPositiveButton("Yes") { dialog, which ->
+            headerlist.add(
+                arrayOf(
+                    "Evnet_Time",
+                    "x_Acc",
+                    "y_Acc",
+                    "z_Acc",
+                    "x_Gyr",
+                    "y_Gyr",
+                    "z_Gyr",
+                    "x_Rot",
+                    "y_Rot",
+                    "z_Rot",
+                    "Rot1",
+                    "Rot2",
+                    "Rot3",
+                    "Rot4",
+                    "Rot5",
+                    "Rot6",
+                    "Rot7",
+                    "Rot8",
+                    "Rot9"
                 )
-                csvHelper.WriteCSVfile(Filename, headerlist)
-                csvHelper.WriteCSVfile(Filename, datalist)
-                headerlist = arrayListOf()
-                var snackbar =
-                    Snackbar.make(it, "The CSV file has been saved.", Snackbar.LENGTH_LONG)
-                snackbar.show()
-                MeasureAgain()
-            }
-            builder.setNegativeButton("No") { dialog, which -> dialog.dismiss() }
-            val dialog = builder.create()
-            dialog.show()
-        }
-    }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        when (requestCode) {
-            2000 -> {
-                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    val pathToExternalStorage = Environment.getExternalStorageDirectory().toString()
-                    val exportDir = File(pathToExternalStorage, "/mHealth_kotlin")
-                    if (!exportDir.exists()) {
-                        exportDir.mkdirs()
-                    }
-                } else {
-                    Toast.makeText(this, "Permission Denied!", Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-    }
-
-    private fun ResetButton() {
-        ResetButton.setOnClickListener {
+            )
+            csvHelper.WriteCSVfile(Filename, headerlist)
+            csvHelper.WriteCSVfile(Filename, datalist)
+            headerlist = arrayListOf()
+            var snackbar =
+                Snackbar.make(it, "The CSV file has been saved.", Snackbar.LENGTH_LONG)
+            snackbar.show()
             MeasureAgain()
         }
+        builder.setNegativeButton("No") { dialog, which -> dialog.dismiss() }
+        val dialog = builder.create()
+        dialog.show()
     }
+}
 
-    private fun MeasureAgain() {
-        exep = 0
-        datalist = arrayListOf()
-        Log.d("1231", "${datalist}")
-        SaveButton.setEnabled(false)
-        ResetButton.setEnabled(false)
-        button.text = "Start"
-        textview.text = "Please start measuring."
-    }
-
-    private fun CsvWrite() {
-        if (dataArray.any { it.isEmpty() }) {
-            Log.d("debug", "Empty elements found in dataArray")
-            return
-        } else {
-
+override fun onRequestPermissionsResult(
+    requestCode: Int,
+    permissions: Array<out String>,
+    grantResults: IntArray
+) {
+    super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+    when (requestCode) {
+        2000 -> {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                val pathToExternalStorage = Environment.getExternalStorageDirectory().toString()
+                val exportDir = File(pathToExternalStorage, "/mHealth_kotlin")
+                if (!exportDir.exists()) {
+                    exportDir.mkdirs()
+                }
+            } else {
+                Toast.makeText(this, "Permission Denied!", Toast.LENGTH_SHORT).show()
+            }
         }
     }
+}
 
-    companion object {
-        private const val FILE_NAME = "Walk_analysis&uuid.csv"
+private fun ResetButton() {
+    ResetButton.setOnClickListener {
+        MeasureAgain()
     }
+}
+
+private fun MeasureAgain() {
+    exep = 0
+    datalist = arrayListOf()
+    Log.d("1231", "${datalist}")
+    SaveButton.setEnabled(false)
+    ResetButton.setEnabled(false)
+    button.text = "Start"
+    textview.text = "Please start measuring."
+}
+
+private fun CsvWrite() {
+    if (dataArray.any { it.isEmpty() }) {
+        Log.d("debug", "Empty elements found in dataArray")
+        return
+    } else {
+    }
+}
+
+companion object {
+    private const val FILE_NAME = "Walk_analysis&uuid.csv"
+}
 }
