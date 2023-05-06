@@ -9,6 +9,7 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
@@ -19,6 +20,9 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatButton
 import com.google.android.material.snackbar.Snackbar
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.ktx.storage
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -26,17 +30,15 @@ import java.util.Locale
 import java.util.UUID
 
 class MainActivity : AppCompatActivity(), SensorEventListener {
-
     private val sensorManager by lazy { getSystemService(Context.SENSOR_SERVICE) as SensorManager }
     private val textview: TextView by lazy { findViewById(R.id.TextView) }
     private val button: AppCompatButton by lazy { findViewById(R.id.BUTTON) }
     private val SaveButton: AppCompatButton by lazy { findViewById(R.id.SaveButton) }
     private val ResetButton: AppCompatButton by lazy { findViewById(R.id.ResetButton) }
     private val pathToExternalStorage = Environment.getExternalStorageDirectory().toString()
+    private val FirebaseStorage : FirebaseStorage = Firebase.storage
     private var rotationMatrix = FloatArray(9)
     private var gravityMatrix = FloatArray(3)
-    private var lastUpdateTime: Long = 0
-    private val SENSOR_INTERVAL = 10
     private var magneticMatrix = FloatArray(3)
     private val exportDir = File(pathToExternalStorage, "/mHealth_kotlin")
     private val dataArray = arrayOf("", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "")
@@ -53,6 +55,17 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         ResetButton() // 초기화 버튼
     }
 
+    private fun firebaseStorageUpload(){
+        Log.d("firebase", "함수에 들어왔음")
+        val FirebaseStorageRef = FirebaseStorage.reference
+        val fileUri = Uri.parse(exportDir.toString())
+        val fileRef = FirebaseStorageRef.child(Filename)
+        fileRef.putFile(fileUri).addOnSuccessListener {
+            Log.d("firebase", "업로드 성공")
+        }.addOnFailureListener {
+            Log.d("firebase", "업로드 실패")
+        }
+    }
     override fun onPause() {
         super.onPause()
         sensorManager.unregisterListener(this)
@@ -181,34 +194,12 @@ private fun SaveCsvfileButton() {
         builder.setTitle("Save CSV File")
         builder.setMessage("Would you like to save the csv file?")
         builder.setPositiveButton("Yes") { dialog, which ->
-            headerlist.add(
-                arrayOf(
-                    "Evnet_Time",
-                    "x_Acc",
-                    "y_Acc",
-                    "z_Acc",
-                    "x_Gyr",
-                    "y_Gyr",
-                    "z_Gyr",
-                    "x_Rot",
-                    "y_Rot",
-                    "z_Rot",
-                    "Rot1",
-                    "Rot2",
-                    "Rot3",
-                    "Rot4",
-                    "Rot5",
-                    "Rot6",
-                    "Rot7",
-                    "Rot8",
-                    "Rot9"
-                )
-            )
+            headerlist.add(arrayOf("Evnet_Time", "x_Acc", "y_Acc", "z_Acc", "x_Gyr", "y_Gyr", "z_Gyr", "x_Rot", "y_Rot", "z_Rot", "Rot1", "Rot2", "Rot3", "Rot4", "Rot5", "Rot6", "Rot7", "Rot8", "Rot9"))
             csvHelper.WriteCSVfile(Filename, headerlist)
             csvHelper.WriteCSVfile(Filename, datalist)
             headerlist = arrayListOf()
-            var snackbar =
-                Snackbar.make(it, "The CSV file has been saved.", Snackbar.LENGTH_LONG)
+            firebaseStorageUpload()
+            var snackbar = Snackbar.make(it, "The CSV file has been saved.", Snackbar.LENGTH_LONG)
             snackbar.show()
             MeasureAgain()
         }
@@ -244,7 +235,6 @@ private fun ResetButton() {
         MeasureAgain()
     }
 }
-
 private fun MeasureAgain() {
     exep = 0
     datalist = arrayListOf()

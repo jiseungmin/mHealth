@@ -107,7 +107,7 @@
         app:layout_constraintTop_toBottomOf="@id/Weight_Textview" />
 
     <TextView
-        android:id="@+id/Sex_Textview"
+        android:id="@+id/Gender_Textview"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
@@ -128,8 +128,8 @@
         android:textColor="@color/black"
         android:textSize="18sp"
         android:textStyle="bold"
-        app:layout_constraintStart_toStartOf="@id/Sex_Textview"
-        app:layout_constraintTop_toBottomOf="@id/Sex_Textview" />
+        app:layout_constraintStart_toStartOf="@id/Gender_Textview"
+        app:layout_constraintTop_toBottomOf="@id/Gender_Textview" />
 
     <CheckBox
         android:id="@+id/female_CheckBox"
@@ -142,7 +142,7 @@
         android:textSize="18sp"
         android:textStyle="bold"
         app:layout_constraintStart_toEndOf="@id/male_CheckBox"
-        app:layout_constraintTop_toBottomOf="@id/Sex_Textview" />
+        app:layout_constraintTop_toBottomOf="@id/Gender_Textview" />
 
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/Next_Button"
