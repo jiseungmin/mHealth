@@ -1,7 +1,9 @@
 package com.example.mhealth_kotlin_ver
 
 import android.Manifest
+import android.content.ContentValues.TAG
 import android.content.Context
+import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.database.SQLException
@@ -20,6 +22,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatButton
 import com.google.android.material.snackbar.Snackbar
+import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.ktx.storage
@@ -37,6 +40,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private val ResetButton: AppCompatButton by lazy { findViewById(R.id.ResetButton) }
     private val pathToExternalStorage = Environment.getExternalStorageDirectory().toString()
     private val FirebaseStorage : FirebaseStorage = Firebase.storage
+    private val FirebaseDB = Firebase.firestore
+    private val UserDBFirebase =  FirebaseDB.collection("User")
     private var rotationMatrix = FloatArray(9)
     private var gravityMatrix = FloatArray(3)
     private var magneticMatrix = FloatArray(3)
@@ -135,6 +140,31 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
 override fun onAccuracyChanged(p0: Sensor?, p1: Int) = Unit
 
+private fun UserFirestoreinfo(){
+    val Username = intent.getStringExtra("Username")
+    val Userage = intent.getStringExtra("Userage")
+    val Userheight = intent.getStringExtra("Userheight")
+    val Userweight = intent.getStringExtra("Userweight")
+    val Usergender = intent.getStringExtra("Usergender")
+    val CurrentPain = intent.getStringExtra("CurrentPain")
+    val CurrentFilling = intent.getStringExtra("CurrentFilling")
+    val CurrentFilling2 = intent.getStringExtra("CurrentFilling2")
+    val Currentdisease = intent.getStringExtra("Currentdisease")
+
+    val document = UserDBFirebase.document(Username.toString())
+    val data = hashMapOf(
+        "name" to Username,
+        "age" to Userage,
+        "height" to Userheight,
+        "weight" to Userweight,
+        "gender" to Usergender,
+        "currentPain" to CurrentPain,
+        "currentFilling" to CurrentFilling,
+        "currentFilling2" to CurrentFilling2,
+        "currentDisease" to Currentdisease
+    )
+    document.set(data).addOnSuccessListener { Log.d(TAG, "Success adding document", ) }.addOnFailureListener { Log.d(TAG, "Error adding document", it) }
+}
 private fun MeasurementButton() {
     button.setOnClickListener {
         if (exep == 0) {
@@ -198,6 +228,7 @@ private fun SaveCsvfileButton() {
             csvHelper.WriteCSVfile(Filename, headerlist)
             csvHelper.WriteCSVfile(Filename, datalist)
             headerlist = arrayListOf()
+            UserFirestoreinfo()
             firebaseStorageUpload()
             var snackbar = Snackbar.make(it, "The CSV file has been saved.", Snackbar.LENGTH_LONG)
             snackbar.show()

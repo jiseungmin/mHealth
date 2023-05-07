@@ -16,19 +16,50 @@ class PersonalAcitivity: AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityPersonalBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        ChcekBoxControl()
+        questionTextview()
+        NextButton()
+    }
 
+    private fun questionTextview() {
         questionFirebase.get().addOnSuccessListener {
             binding.NameTextview.text  =  it.getString("1")
             binding.AgeTextview.text = it.getString("2")
             binding.HeightTextview.text = it.getString("3")
             binding.WeightTextview.text = it.getString("4")
             binding.GenderTextview.text = it.getString("5")
-        }
+        }.addOnFailureListener {}
+    }
 
+    private fun NextButton() {
         binding.NextButton.setOnClickListener {
-            val intent = Intent(this, SurveyActivity::class.java)
-            startActivity(intent)
-        }
+            val isMaleChecked = binding.maleCheckBox.isChecked // "남자" 체크박스의 체크 여부 가져오기
+            val isFemaleChecked = binding.femaleCheckBox.isChecked // "여자" 체크박스의 체크 여부 가져오기
+            val PersonalIntent = Intent(this,SurveyActivity::class.java)
+            val Username = binding.NameEditText.text.toString()
+            val Userage = binding.AgeEditText.text.toString()
+            val Userheight = binding.HeightEditText.text.toString()
+            val Userweight = binding.WeightEditText.text.toString()
+            val Usergender = if(isMaleChecked){ "남자" }else if (isFemaleChecked){ "여자" }else{ "" }
 
+            PersonalIntent.putExtra("Username",Username)
+            PersonalIntent.putExtra("Userage",Userage)
+            PersonalIntent.putExtra("Userheight",Userheight)
+            PersonalIntent.putExtra("Userweight",Userweight)
+            PersonalIntent.putExtra("Usergender",Usergender)
+            startActivity(PersonalIntent)
+        }
+    }
+    private fun ChcekBoxControl() {
+        binding.maleCheckBox.setOnCheckedChangeListener { buttonView, isChecked ->
+            if (isChecked) {
+                binding.femaleCheckBox.isChecked = false
+            }
+        }
+        binding.femaleCheckBox.setOnCheckedChangeListener { buttonView, isChecked ->
+            if (isChecked) {
+                binding.maleCheckBox.isChecked = false
+            }
+        }
     }
 }
