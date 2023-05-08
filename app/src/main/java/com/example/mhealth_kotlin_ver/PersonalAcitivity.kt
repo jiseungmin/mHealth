@@ -2,8 +2,10 @@ package com.example.mhealth_kotlin_ver
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.mhealth_kotlin_ver.databinding.ActivityPersonalBinding
+import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
@@ -42,12 +44,18 @@ class PersonalAcitivity: AppCompatActivity() {
             val Userweight = binding.WeightEditText.text.toString()
             val Usergender = if(isMaleChecked){ "남자" }else if (isFemaleChecked){ "여자" }else{ "" }
 
-            PersonalIntent.putExtra("Username",Username)
-            PersonalIntent.putExtra("Userage",Userage)
-            PersonalIntent.putExtra("Userheight",Userheight)
-            PersonalIntent.putExtra("Userweight",Userweight)
-            PersonalIntent.putExtra("Usergender",Usergender)
-            startActivity(PersonalIntent)
+            if (Username.isNotEmpty() && Userage.isNotEmpty() && Userheight.isNotEmpty() && Userweight.isNotEmpty() && (isMaleChecked || isFemaleChecked)) {
+                val PersonalIntent = Intent(this, SurveyActivity::class.java)
+                PersonalIntent.putExtra("Username", Username)
+                PersonalIntent.putExtra("Userage", Userage)
+                PersonalIntent.putExtra("Userheight", Userheight)
+                PersonalIntent.putExtra("Userweight", Userweight)
+                PersonalIntent.putExtra("Usergender", Usergender)
+                startActivity(PersonalIntent)
+            } else {
+                var snackbar = Snackbar.make(it, "Please fill out all required information.", Snackbar.LENGTH_LONG)
+                snackbar.show()
+            }
         }
     }
     private fun ChcekBoxControl() {

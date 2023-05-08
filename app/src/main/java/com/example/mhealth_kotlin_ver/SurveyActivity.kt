@@ -2,9 +2,11 @@ package com.example.mhealth_kotlin_ver
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.mhealth_kotlin_ver.databinding.ActivityPersonalBinding
 import com.example.mhealth_kotlin_ver.databinding.ActivitySurveyBinding
+import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
@@ -39,43 +41,35 @@ class SurveyActivity : AppCompatActivity() {
             val Commonfilling = binding.FillingCommonlyCheckbox.isChecked
             val Badisfilling = binding.FillingBadCheckbox.isChecked
 
+
             val SurveyIntent = Intent(this, MainActivity::class.java)
-            val CurrentPain = if (yespain) {
-                "Yes"
-            } else if (nopain) {
-                "No"
-            } else {
-                ""
-            }
+            val CurrentPain = if (yespain) { "Yes" } else if (nopain) { "No" } else { "" }
             val CurrentFilling = binding.StatusEditText.text.toString()
-            val CurrentFilling2 = if (Goodfilling) {
-                "Good"
-            } else if (Commonfilling) {
-                "Common"
-            } else if (Badisfilling) {
-                "Bad"
-            } else {
-                ""
-            }
+            val CurrentFilling2 = if (Goodfilling) { "Good" } else if (Commonfilling) { "Common" } else if (Badisfilling) { "Bad" } else { "" }
             val Currentdisease = binding.DiseaseEditText.text.toString()
 
-            val Username = intent.getStringExtra("Username")
-            val Userage = intent.getStringExtra("Userage")
-            val Userheight = intent.getStringExtra("Userheight")
-            val Userweight = intent.getStringExtra("Userweight")
-            val Usergender = intent.getStringExtra("Usergender")
+            if((yespain || nopain) && CurrentFilling.isNotEmpty()&&(Goodfilling || Commonfilling || Badisfilling)&&Currentdisease.isNotEmpty()){
+                val Username = intent.getStringExtra("Username")
+                val Userage = intent.getStringExtra("Userage")
+                val Userheight = intent.getStringExtra("Userheight")
+                val Userweight = intent.getStringExtra("Userweight")
+                val Usergender = intent.getStringExtra("Usergender")
 
-            SurveyIntent.putExtra("Username", Username)
-            SurveyIntent.putExtra("Userage", Userage)
-            SurveyIntent.putExtra("Userheight", Userheight)
-            SurveyIntent.putExtra("Userweight", Userweight)
-            SurveyIntent.putExtra("Usergender", Usergender)
-            SurveyIntent.putExtra("CurrentPain", CurrentPain)
-            SurveyIntent.putExtra("CurrentFilling", CurrentFilling)
-            SurveyIntent.putExtra("CurrentFilling2", CurrentFilling2)
-            SurveyIntent.putExtra("Currentdisease", Currentdisease)
+                SurveyIntent.putExtra("Username", Username)
+                SurveyIntent.putExtra("Userage", Userage)
+                SurveyIntent.putExtra("Userheight", Userheight)
+                SurveyIntent.putExtra("Userweight", Userweight)
+                SurveyIntent.putExtra("Usergender", Usergender)
+                SurveyIntent.putExtra("CurrentPain", CurrentPain)
+                SurveyIntent.putExtra("CurrentFilling", CurrentFilling)
+                SurveyIntent.putExtra("CurrentFilling2", CurrentFilling2)
+                SurveyIntent.putExtra("Currentdisease", Currentdisease)
 
-            startActivity(SurveyIntent)
+                startActivity(SurveyIntent)
+            }else{
+                var snackbar = Snackbar.make(it, "Please fill out all required information.", Snackbar.LENGTH_LONG)
+                snackbar.show()
+            }
         }
     }
     private fun ChcekBoxControl() {

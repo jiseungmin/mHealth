@@ -26,6 +26,9 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.ktx.storage
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -61,10 +64,12 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     }
 
     private fun firebaseStorageUpload(){
-        Log.d("firebase", "함수에 들어왔음")
+        val filePath = exportDir.toString()
+        val Username = intent.getStringExtra("Username")
         val FirebaseStorageRef = FirebaseStorage.reference
-        val fileUri = Uri.parse(exportDir.toString())
-        val fileRef = FirebaseStorageRef.child(Filename)
+        val file = File(filePath, Filename)
+        val fileUri = Uri.fromFile(file)
+        val fileRef = FirebaseStorageRef.child(Username.toString()).child(Filename)
         fileRef.putFile(fileUri).addOnSuccessListener {
             Log.d("firebase", "업로드 성공")
         }.addOnFailureListener {
@@ -221,6 +226,7 @@ private fun SaveCsvfileButton() {
     }
     SaveButton.setOnClickListener {
         val builder = AlertDialog.Builder(this)
+        val Intent = Intent(this,PersonalAcitivity::class.java)
         builder.setTitle("Save CSV File")
         builder.setMessage("Would you like to save the csv file?")
         builder.setPositiveButton("Yes") { dialog, which ->
@@ -233,6 +239,10 @@ private fun SaveCsvfileButton() {
             var snackbar = Snackbar.make(it, "The CSV file has been saved.", Snackbar.LENGTH_LONG)
             snackbar.show()
             MeasureAgain()
+            GlobalScope.launch {
+                delay(1000) // 3초 동안 대기
+                startActivity(Intent)
+            }
         }
         builder.setNegativeButton("No") { dialog, which -> dialog.dismiss() }
         val dialog = builder.create()
