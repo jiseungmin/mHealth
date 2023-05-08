@@ -69,7 +69,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         val FirebaseStorageRef = FirebaseStorage.reference
         val file = File(filePath, Filename)
         val fileUri = Uri.fromFile(file)
-        val fileRef = FirebaseStorageRef.child(Username.toString()).child(Filename)
+        val fileRef = FirebaseStorageRef.child("User").child(Username.toString()).child(Filename)
         fileRef.putFile(fileUri).addOnSuccessListener {
             Log.d("firebase", "업로드 성공")
         }.addOnFailureListener {
