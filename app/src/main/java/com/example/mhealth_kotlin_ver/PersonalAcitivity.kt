@@ -1,8 +1,11 @@
 package com.example.mhealth_kotlin_ver
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
-import android.widget.Toast
+import android.util.Log
+import android.view.MotionEvent
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.example.mhealth_kotlin_ver.databinding.ActivityPersonalBinding
 import com.google.android.material.snackbar.Snackbar
@@ -19,10 +22,34 @@ class PersonalAcitivity: AppCompatActivity() {
         binding = ActivityPersonalBinding.inflate(layoutInflater)
         setContentView(binding.root)
         ChcekBoxControl()
+        Adminmeun()
         questionTextview()
         NextButton()
     }
 
+    @SuppressLint("ClickableViewAccessibility")
+    private fun Adminmeun() {
+        var touchcount = 0
+        binding.TitleTextview.setOnTouchListener { _, event ->
+            if (event.action == MotionEvent.ACTION_DOWN) {
+                touchcount++
+                Log.d("text",touchcount.toString())
+                if(binding.NameEditText.text.toString() == "Admin" && touchcount >= 8){
+                    val builder = AlertDialog.Builder(this)
+                    builder.setTitle("Admin Page")
+                    builder.setMessage("are you going to the admin page?")
+                    builder.setPositiveButton("yes",{ dialog, which ->
+                        val intent = Intent(this,AdminloginActivity::class.java)
+                        startActivity(intent)
+                    })
+                    builder.setNegativeButton("no",{dialog, which ->})
+                    builder.show()
+                    touchcount = 0
+                }
+            }
+            true
+        }
+    }
     private fun questionTextview() {
         questionFirebase.get().addOnSuccessListener {
             binding.NameTextview.text  =  it.getString("1")
@@ -37,7 +64,6 @@ class PersonalAcitivity: AppCompatActivity() {
         binding.NextButton.setOnClickListener {
             val isMaleChecked = binding.maleCheckBox.isChecked // "남자" 체크박스의 체크 여부 가져오기
             val isFemaleChecked = binding.femaleCheckBox.isChecked // "여자" 체크박스의 체크 여부 가져오기
-            val PersonalIntent = Intent(this,SurveyActivity::class.java)
             val Username = binding.NameEditText.text.toString()
             val Userage = binding.AgeEditText.text.toString()
             val Userheight = binding.HeightEditText.text.toString()

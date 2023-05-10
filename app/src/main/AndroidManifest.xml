@@ -27,6 +27,8 @@
         <activity android:name=".MainActivity"/>
         <activity android:name=".PersonalAcitivity"/>
         <activity android:name=".SurveyActivity"/>
+        <activity android:name=".AdminloginActivity"/>
+        <activity android:name=".AdminPageActivity"/>
     </application>
 
 </manifest>
